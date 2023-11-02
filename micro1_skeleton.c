@@ -30,7 +30,7 @@ int main()
 
 
  	printf("Cheeze !\r\n");
-	system("raspistill -w 640 -h 480 -t 10 -o image.bmp");
+	system("raspistill -w 640 -h 480 -t 2000 -o image.bmp");
  	
  	
  	unsigned char* imgIn = stbi_load("image.bmp", &width, &height, &channel, 3);
@@ -59,7 +59,6 @@ int main()
 }
 
 void mirror_transform (unsigned char* in, int const height, int const width, int const channel, unsigned char* out) {
-    // channel * width * height
 	int h, w, c;
 	for (h = 0; h < height; h++) 
 	for (w = 0; w < width; w++) 
@@ -82,21 +81,19 @@ void grayScale_transform (unsigned char* in, int const height, int const width, 
 
 void sobelFiltering_transform(unsigned char* in, int const height, int const width, int const channel, unsigned char* out) {
 	int h, w, c, x, y;
-	unsigned char x_sobel[3][3] = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
-	unsigned char y_sobel[3][3] = { {1, 2, 1}, {0, 0, 0}, {-1, -2, -1} };
-
-	unsigned char* gray_img;
-	grayScale_transform(in, height, width, channel, gray_img);
-
+	int x_sobel[3][3] = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
+	int y_sobel[3][3] = { {1, 2, 1}, {0, 0, 0}, {-1, -2, -1} };
+	
 	for (h = 1; h < height - 1; h++)
 	for (w = 1; w < width - 1; w++) {
-		int x_conv = 0, y_conv = 0, sum;
+		int x_conv = 0;
+		int y_conv = 0;
 		for (x = 0; x <= 2; x++)
 		for (y = 0; y <= 2; y++) {
-			x_conv += gray_img[(h + y - 1) * width * channel + (w + x - 1) * channel] * x_sobel[y][x];
-			y_conv += gray_img[(h + y - 1) * width * channel + (w + x - 1) * channel] * y_sobel[y][x];
+			x_conv += in[(h + y - 1) * width * channel + (w + x - 1) * channel] * x_sobel[y][x];
+			y_conv += in[(h + y - 1) * width * channel + (w + x - 1) * channel] * y_sobel[y][x];
 		}
-		sum = abs(x_conv) + abs(y_conv);
+		int sum = abs(x_conv) + abs(y_conv);
 
 		for (c = 0; c < channel; c++)
 			out[h * width * channel + w * channel + c] = sum;
@@ -112,4 +109,5 @@ void sobelFiltering_transform(unsigned char* in, int const height, int const wid
 		out[w * channel + c] = 0;
 		out[(height - 1) * width * channel + w * channel + c] = 0;
 	}
+
 }
